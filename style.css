@@ -1,0 +1,317 @@
+/* Stylesheet last updated 02 Jan 2015 */
+
+@import url(http://fonts.googleapis.com/css?family=Lato:400,700,400italic);
+
+
+/* --- [ BEGIN GAMEBOOK MECHANICS ] --- */
+
+/* Warning: Modifying these styles may render the gamebook unplayable. */
+
+/* The line below is essential for keeping certain passages hidden until appropriate */
+#canon, [data-logic-result="false"] { display: none !important; }
+
+/* Help the scene container resize more smoothly */
+#scene { overflow: hidden; }
+
+/* Make any non-link JavaScript action element use a pointer-style cursor */
+.javascript-action { cursor: pointer; }
+
+/* Add a visual hint that links are paused while text is fading out */
+#scene.links-paused a:hover { text-decoration: none; cursor: default; }
+
+/* --- [ END GAMEBOOK MECHANICS ] --- */
+
+
+/* Change what you like below. */
+
+body {
+	background-color: #333;
+	color #333;
+	font-family: Lato, Verdana, Geneva, sans-serif;
+	font-size: 14pt;
+	line-height: 1.4;
+}
+
+tt, pre, code {
+	font-family: Consolas, "Andale Mono", "Courier New", Courier, monospace;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: "Trebuchet MS", "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Tahoma, sans-serif;
+}
+
+h1 { font-size: 170%; }
+h2 { font-size: 155%; }
+h3 { font-size: 140%; }
+h4 { font-size: 110%; }
+h5 { font-size: 100%; }
+h6 { font-size: 100%; }
+
+/* For preloading Google fonts */
+.font-preloader {
+	font-size: 1px;
+	visibility: hidden;
+}
+.font-preloader .f1 { font-weight: bold; }
+.font-preloader .f2 { font-style: italic; }
+.font-preloader .f3 { font-weight: bold; font-style: italic; }
+
+a {
+	font-weight: bold;
+	color: #555;
+}
+
+a[href^="http://"]:after, a[href^="https://"]:after {
+	content: "";
+	padding-right: 15px;
+	background: url("link-arrow.png") no-repeat right;
+}
+
+#header, #footer {
+	background-color: #666;
+	text-align: center;
+	padding: 0.3em;
+	min-height: 0.15em;
+}
+
+#header, #header a, #footer, #footer a {
+	color: white;
+	text-decoration: none;
+}
+
+#header a:hover, #footer a:hover {
+	border-bottom: thin solid white;
+}
+
+#header h1 {
+	font-size: 140%;
+}
+
+#header h2 {
+	font-size: 100%;
+	font-weight: normal;
+	margin-top: -0.2em;
+	color: #bbb;
+}
+
+#header-commands {
+	display: inline;
+	font-size: 85%;
+}
+
+#header-commands li {
+	display: inline;
+	margin: 0 1em 0;
+}
+
+#footer {
+	clear: both;
+}
+
+/* This is the middle section between the header and footer (contains #sidebar and #main) */
+#content-wrapper {
+	background-color: #ccc;
+	border: #888 0px solid;
+	overflow: hidden;
+}
+
+#sidebar {
+	float: left;
+	width: 8em;
+	padding: 1.65em 1em 1em;
+	overflow: hidden;
+}
+
+#sidebar h1 {
+	margin: 0 0 .1em;
+	padding: 0;
+	font-size: 100%;
+	color: #888;
+}
+
+#sidebar ul {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	font-size: 85%;
+}
+
+#sidebar li {
+	line-height: 1.25;
+	margin: 0;
+	padding: .2em 0;
+	border-top: solid thin #aaa;
+	border-bottom: solid thin #aaa;
+}
+
+#sidebar li:nth-child(n+2) { border-top-style: none; } /* avoid doubling up lines between items */
+
+#sidebar li a { text-decoration: none; }
+
+/* On small screens, hide the sidebar and show the normally-hidden "header-commands" area */
+#header-commands { display: none; }
+@media screen and (max-width: 600px) {
+	#sidebar { display: none; }
+	#header-commands { display: inline; }
+}
+
+/* This is the main area to the right of the sidebar (includes #no-js and #scene) */
+#main { }
+
+/* Alert box for users without JavaScript */
+#no-js {
+	font-size: 85%;
+	padding: 1em;
+	text-align: center;
+	background: #fdd;
+	border: 2px solid red;
+	float: left;
+}
+
+/* This is where the story content appears */
+#scene {
+	padding: 1.2em 1em 1.5em;
+	background: #f0f0f0;
+	max-height: 999999px; /* to avoid Font Boosting issues on Chrome for Android */
+}
+
+#scene h3 {
+	border-bottom: solid thin #bbb;
+}
+
+blockquote {
+	background: #fbfbfb;
+	border: solid thin #bbb;
+	padding: .75em 1em 1em;
+	margin: 0 1em 0;
+	border-radius: 10px;
+}
+
+#scene img {
+	background: #fbfbfb;
+	border: solid thin #666;
+	padding: 0;
+	border-radius: 10px;
+}
+
+#scene table { border-collapse: collapse; }
+
+#scene th, #scene td {
+	text-align: left;
+	vertical-align: top;
+	padding: .3em .6em;
+}
+
+#scene th {
+	background: #ccc;
+	border: solid thin #333;
+}
+
+#scene td {
+	background: #fbfbfb;
+	border: solid thin #bbb;
+}
+
+/* Darken tables' outside borders */
+#scene table tr:first-of-type td { border-top-color: #333; }
+#scene table tr:last-of-type td { border-bottom-color: #333; }
+#scene table tr td:first-of-type { border-left-color: #333; }
+#scene table tr td:last-of-type { border-right-color: #333; }
+
+/* Erase upper-left cell if it's empty */
+#scene table tr:first-child > td:first-child:empty {
+	background: none;
+	border-top-style: none;
+	border-left-style: none;
+	border-bottom-color: #333;
+}
+
+hr {
+	width: 100%;
+	margin: 0 auto;
+	background: none;
+	height: 1px;
+	border: none;
+	border-top: solid thin #bbb;
+}
+
+/* Reset spacing */
+p, h1, h2, h3, h4, h5, h6, hr, ul, ol, dl, li, dd {
+	margin: 0;
+	padding: 0;
+}
+
+li, dd { margin-left: 2.5em; }
+
+dt { font-weight: bold; }
+
+/* Prevent subscript and superscript from changing line height */
+sup, sub {
+	vertical-align: baseline;
+	font-size: 75%;
+	position: relative;
+}
+sup { top: -.5em; }
+sub { top: .25em; }
+
+
+/* --- VERTICAL SPACING --- */
+
+p, div.p { margin-bottom: 1em; }
+h1, h2, h3, h4, h5, h6 { margin-bottom: 2px; }
+#scene h3 { margin-bottom: 0.75em; }
+fieldset, blockquote, table { margin-bottom: 1em; }
+ul, ol, dl { margin-bottom: 1em; }
+hr { margin-bottom: 1.3em; }
+
+/* Remove margin beneath the last element in the scene or inside a box */
+#scene > :last-child,
+#scene blockquote > :last-child { margin-bottom: 0; }
+
+hr { margin-top: 1em; }
+
+/* When a table follows a heading */
+h1 + table, h2 + table, h3 + table, h4 + table, h5 + table, h6 + table { margin-top: .5em; }
+
+/* When a heading follows a paragraph */
+p + h1, p + h2, p + h3, p + h4, p + h5, p + h6,
+div.p + h1, div.p + h2, div.p + h3, div.p + h4, div.p + h5, div.p + h6 { margin-top: 8px; }
+
+/* When a heading follows a list */
+ul+h1, ol+h1, dl+h1,
+ul+h2, ol+h2, dl+h2,
+ul+h3, ol+h3, dl+h3,
+ul+h4, ol+h4, dl+h4,
+ul+h5, ol+h5, dl+h5,
+ul+h6, ol+h6, dl+h6
+{ margin-top: 6px; }
+
+/* When a list follows a heading */
+h1+ul, h1+ol, h1+dl,
+h2+ul, h2+ol, h2+dl,
+h3+ul, h3+ol, h3+dl,
+h4+ul, h4+ol, h4+dl,
+h5+ul, h5+ol, h5+dl,
+h6+ul, h6+ol, h6+dl
+{ margin-top: 6px; }
+
+/* When a list item follows another list item */
+li + li { margin-top: 0.1em; }
+
+/* When a new definition term follows a definition */
+dd + dt { margin-top: .5em; }
+
+/* When a list follows a paragraph */
+p + ul, p + ol, p + dl,
+div.p + ul, div.p + ol, div.p + dl { margin-top: -.5em; }
+
+
+/* --- INLINE LISTS --- */
+
+.comma-series > .series-add-comma:after { content: ", "; }
+.comma-series > .series-add-and:after { content: " and "; }
+.comma-series > .series-add-or:after { content: " or "; }
+.comma-series > .series-add-comma-and:after { content: ", and "; }
+.comma-series > .series-add-comma-or:after { content: ", or "; }
+
+ul.comma-series, ul.comma-series li { display: inline; list-style: none; padding: 0; margin: 0; }

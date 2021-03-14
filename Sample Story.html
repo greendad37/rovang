@@ -1,0 +1,182 @@
+
+<!doctype html>
+<html lang="en">
+<head data-storyid="sample-story">
+
+   <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+   <title>Sample Story</title>
+   <link rel="stylesheet" href="style.css">
+
+	<script>document.write("<style>#no-js { display: none; }</style>");</script>
+	<script src="jquery.min.js"></script>
+	<script src="engine.js"></script>
+	<script src="smartquotes.min.js"></script>
+
+</head>
+
+<body>
+
+<div id="header">
+<ul id="header-commands">
+	<li><a data-click-savestory>Save</a>
+	<li><a data-click-loadstory>Load</a>
+	<li><a data-click-resetstory>Restart</a>
+</ul>
+</div>
+
+<div id="content-wrapper">
+
+<div id="sidebar">
+<h1>Story Actions</h1>
+<ul>
+	<li><a data-click-savestory>Save</a>
+	<li><a data-click-loadstory>Load</a>
+	<li><a data-click-resetstory>Restart</a>
+</ul>
+</div>
+
+<div id="main">
+<div id="no-js">This story requires JavaScript; please enable it in your browser.</div>
+<div id="scene"><!-- game engine will place story content here --></div>
+</div>
+
+</div>
+
+<div id="footer">
+</div>
+
+<div id="canon">
+<!-- ***** BEGIN CANON ***** -->
+
+<div>
+<p>Hey, what's that sound?</p>
+<blockquote>Zzzzzzz&#8230;</blockquote>
+<p>Oh, you're sleeping. Hey, that's a novel way for a story to begin. Feel free to <a data-click="library">wake up</a> any time now.
+</div>
+
+<div class="library" data-load-addtovar="timesVisitedLibrary"><!-- library section -->
+
+<h3>Library</h3>
+<p>Yeah, that's it! You clicked a link&#8230; I mean, woke up. And now your surroundings have changed. To a library. <span data-load=".library .visit-mention"></span><span data-logic-if="Variables.timesVisitedLibrary <= 2"> Might as well <a data-click-append=".library .looked" data-click-remove="^">look around</a>.</span></p>
+
+<div data-logic-if="Variables.timesVisitedLibrary > 2" data-load="looked"></div>
+
+<div data-logic-if="false"><!-- extra library stuff -->
+
+<span class="visit-mention">
+	<span data-logic-if="Variables.timesVisitedLibrary >= 4">Yes, the same library.</span>
+	<span data-logic-elseif="Variables.timesVisitedLibrary >= 3">A library that seems slightly familiar.</span>
+	<span data-logic-elseif="Variables.timesVisitedLibrary >= 2">A library you may or may not have fallen asleep in before.</span>
+	<span data-logic-else>A library you're pretty sure you haven't fallen asleep in before.</span>
+</span>
+
+<div class="looked"><!-- "looked" passage -->
+<p data-logic-if="Variables.timesVisitedLibrary <= 2">After some craning and squinting, you safely determine it is, in fact, a library. Well, that's resolved.</p>
+
+<p>Nearby are:</p>
+<ul>
+<li><a data-click-become=".library .the-book">A book</a>
+<li><a data-click-become=".library .more-books">More books</a>
+<li><a data-click-become=".library .even-more-books">Even more books</a>
+</ul>
+
+<p>Or, of course, you could just <a data-click="div">go back to sleep</a>.
+</div><!-- end "looked" passage -->
+
+<span class="the-book"><i>An Exhaustive History of Interactive Fiction</i> &mdash; some other time, maybe</span>
+<span class="more-books">A variety of <a data-click-replace="more-books; .library .more-books-examine">books</a> too mundane to list here</span>
+<span class="more-books-examine">Those books right there are just a distraction, really. Just <a data-click-remove="^^">forget about those</a>.</span>
+<span class="even-more-books">The usual &mdash; biographies, books about frogs, a <a data-click-become=".library .glowing-book">softly glowing magical book</a>&#8230;</span>
+<span class="glowing-book">softly glowing magical book you could <a data-click="void">open</a> if you felt daring</span>
+
+</div><!-- end extra library stuff -->
+</div><!-- end library section -->
+
+<div class="void" data-load-setvar="Variables.dreams; [ ]"><!-- begin void -->
+<h3>Void</h3>
+<p>Gravity gives way, and you and your previously unmentioned library chair find yourselves floating in a void filled with mist, as voids tend to be.<span class="forming"> Ahead of you, <a data-click-remove="forming" data-click-append=".void .doors">colored shapes</a> seem to be materializing.</span></p>
+
+<div data-logic-if="false"><!-- begin void extras --->
+
+<div class="doors">
+<p>Three doors appear in front of you, each colored differently.</p>
+<ul>
+<li><a data-click="red-room">Red door</a>
+<li><a data-click="yellow-room">Yellow door</a>
+<li><a data-click="green-room">Green door</a>
+</ul>
+<p>Or you can just <a data-click="red-room; yellow-room; green-room">pick one randomly</a>.
+</div>
+
+</div><!-- end void extras --->
+</div><!-- end void -->
+
+<div class="red-room" data-load-setvar="lastRoom; red-room">
+<h3>Red Room</h3>
+<p>This is an empty red room. The paint color kind of makes you angry, actually. Why would somebody paint a room like this??
+<p data-load="room-actions">
+</div>
+
+<div class="yellow-room" data-load-setvar="lastRoom; yellow-room">
+<h3>Yellow Room</h3>
+<p>This is an empty yellow room. The color is only mildly offensive.
+<p data-load="room-actions">
+</div>
+
+<div class="green-room" data-load-setvar="lastRoom; green-room">
+<h3>Green Room</h3>
+<p>This is an empty green room. Could've been worse.
+<p data-load="room-actions">
+</div>
+
+<span class="room-actions">Ahead is a <a data-click="hallway">hallway</a>. You should probably go there unless you're going to try to <a data-click="sleep">sleep in here</a>.</span>
+
+<div class="sleep" data-nobookmark>
+<p>Oh, hey, you fell right asleep. You're pretty good at that. <span data-logic-if="Variables.timesVisitedLibrary > 2">But I guess we knew that from that whole library thing. You know, with the sleeping over and over&#8230;? Ah, good times.</span>
+<p><a data-click-back>Wake up</a> or <a data-click="dream">let a dream come to you</a>?
+</div>
+
+<div class="dream" data-nobookmark>
+<div class="content" data-load-setrandom="dream;4">
+<p data-logic-if="Variables.dream === 0" data-load-run="Util.addToArray( Variables.dreams, 'pears' )">You dream of pears.</p>
+<p data-logic-elseif="Variables.dream === 1" data-load-run="Util.addToArray( Variables.dreams, 'applesauce' )">You dream of applesauce.</p>
+<p data-logic-elseif="Variables.dream === 2"  data-load-run="Util.addToArray( Variables.dreams, 'monkeys' )">You dream of monkeys.</p>
+<p data-logic-else  data-load-run="Util.addToArray( Variables.dreams, 'bridges' )">You dream of bridges made of light bulbs.</p>
+</div>
+<p><a data-click-back>Wake up</a>, <a data-click="stop-dreaming">dream about nothing</a>, or <a data-click-refresh="content">dream some more</a>?</div>
+
+<div class="stop-dreaming" data-nobookmark>
+<p>Okay, now you're just sleeping. That's much better.
+<p><a data-click-back>Wake up</a> or <a data-click="dream">dream some more</a>?
+</div>
+
+<div class="hallway">
+<span data-logic-if="Util.isUndefined( Variables.dreamsHad )" data-load-setvar="Variables.dreamsHad; [ ]"></span>
+<h3>Hallway</h3>
+<div class="p">It's a plain white hallway. Ahead is a <a data-click-become="painting">painting</a>.</p>
+
+<div data-logic-if>
+<span class="painting">
+painting of <span class="comma-series"><span data-logic-if="Util.arrayContains( Variables.dreams, 'pears' )">pears</span><span data-logic-if="Util.arrayContains( Variables.dreams, 'applesauce' )">applesauce</span><span data-logic-if="Util.arrayContains( Variables.dreams, 'monkeys' )">monkeys</span><span data-logic-if="Util.arrayContains( Variables.dreams, 'bridges' )">bridges made of light bulbs</span><span data-logic-if="Util.arrayLength( Variables.dreams ) === 0">missed opportunities</span></span></span>
+</div>
+
+</div>
+
+<p>Behind you are doorways leading into three rooms:
+<ul>
+<li>A <a data-click="red-room">red room</a> <span data-load="hallway-back-clue" data-logic-if="Variables.lastRoom === 'red-room'"></span>
+<li>A <a data-click="yellow-room">yellow room</a> <span data-load="hallway-back-clue" data-logic-if="Variables.lastRoom === 'yellow-room'"></span>
+<li>A <a data-click="green-room">green room</a> <span data-load="hallway-back-clue" data-logic-if="Variables.lastRoom === 'green-room'"></span>
+</ul>
+<p data-logic-if="Variables.lastRoom">Just for fun, if you close your eyes and <a data-click="Variables.lastRoom">wander around</a>, I'll bet you'll end up in the room you were just in.
+<p data-logic-if="Util.arrayLength( Variables.dreams ) >= 4">And, so you know, you've dreamed all the dreams. You can always <a data-click-resetstory="quiet">restart</a>, though.
+</div>
+
+<span class="hallway-back-clue">(that's where you just came from)</span>
+
+<!-- ***** END CANON ***** -->
+</div>
+
+</body>
+</html>

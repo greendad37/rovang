@@ -1,0 +1,716 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+
+   <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+   <title>Gamebook Engine Documentation</title>
+   <link rel="stylesheet" href="style.css">
+	<style>
+		code { font-size: 92%; }
+		code.example { background: #ccc; position: relative; top: -.05em; }
+		.actions h4 { text-decoration: underline; }
+	</style>
+
+</head>
+
+<body>
+
+<div id="header">
+<h1>Gamebook Engine</h1>
+<h2>Documentation updated 22 Jan 2016</h2>
+</div>
+
+<div id="content-wrapper">
+
+<div id="sidebar">
+<h1>Topics</h1>
+<ul>
+	<li><a href="#intro">Intro</a>
+	<li><a href="#story-file">The Story File</a>
+	<li><a href="#writing-canon">Writing Canon</a>
+	<li><a href="#styles">Styles</a>
+	<li><a href="#click-actions">Click Actions</a>
+	<li><a href="#logic-blocks">Logic Blocks</a>
+	<li><a href="#load-actions">Load Actions</a>
+	<li><a href="#bookmarks">Bookmarks</a>
+	<li><a href="#selecting-passages">Selecting Passages</a>
+	<li><a href="#altering-the-scene">Altering the Scene</a>
+	<li><a href="#variables">Variables</a>
+	<li><a href="#arrays">Arrays</a>
+	<li><a href="#objects">Objects and Properties</a>
+	<li><a href="#debugging">Debugging</a>
+	<li><a href="#faq">Q&A</a>
+</ul>
+</div>
+
+<div id="main">
+<div id="scene">
+
+<h3 id="intro">Intro</h3>
+
+<p>This document will guide you in the creation of your own interactive story using the <a href="index.html">gamebook engine</a>.</p>
+
+<p>While progressing through your story, a reader will see limited portions of text (or other HTML content) at a time; these are called <i>scenes</i>. As the writer, you decide how to break your story into scenes.</p>
+
+<p>Your story should also include special links which generally perform one of the following actions when clicked (these are called <i><a href="#click-actions">click actions</a></i>):</p>
+<ul>
+<li>Change to a new scene
+<li>Add new content to the current scene
+<li>Remove certain content from the current scene
+<li>Replace certain content in the current scene with new content
+<li>Many other actions including saving/loading, setting variables, and running custom JavaScript if desired
+</ul>
+
+<p>Most actions can also be assigned to run automatically as soon as certain content is loaded into a scene (these are called <i><a href="#load-actions">load actions</a></i>). Additionally, content within a scene can conditionally show or hide itself depending on variable conditions (these are <i><a href="#logic-blocks">logic blocks</a></i>).</p>
+
+<h3 id="story-file">The Story File</h3>
+<p>A story file is an HTML file (such as the example file <a href="sample-story.html">sample-story.html</a>) which contains all the parts necessary to generate your story.
+
+<h4 id="head">Head</h4>
+
+<p>The <code>head</code> element of your HTML file must include references to the following components:</p>
+<dl>
+<dt><a href="jquery.min.js">jquery.min.js</a><dd>helper library on which the gamebook engine depends (example: <code class="example">&lt;script src="jquery.min.js"&gt;&lt;/script&gt;</code>)
+<dt><a href="engine.js">engine.js</a><dd>the gamebook engine itself (example: <code class="example">&lt;script src="engine.js"&gt;&lt;/script&gt;</code>; must be placed <em>after</em> jQuery reference above)
+<dt><a href="style.css">style.css</a><dd>stylesheet which selectively hides certain story elements (example: <code class="example">&lt;link rel="stylesheet" href="style.css"&gt;</code>)
+</dl>
+
+<h5 id="story-id">Story ID</h5>
+<p>Additionally, you should give your story a unique <i>story ID</i> so the save/load data in your story doesn&rsquo;t overlap with other story files (assuming you will offer save/load functionality in your story). To assign a story ID, assign a <code>data-storyid</code> attribute to the <code>head</code> element of your HTML file (example: <code class="example">&lt;head data-storyid="jsmith001"&gt;</code>). You may use any sequence of numbers and letters in your story ID (spaces and symbols are allowed), but avoid repeating the same ID between your stories (if your first story was <code>jsmith001</code>, for instance, increment your second story to <code>jsmith002</code>).<p>
+
+<h4 id="body">Body</h4>
+
+<p>The <code>body</code> element of your HTML file must include two non-overlapping block elements (such as <code>div</code> elements) using the following ID tags:</p>
+<dl>
+<dt><b>scene</b><dd>container where the story&rsquo;s contents will generate and evolve as the story progresses (example: <code class="example">&lt;div id="scene"&gt;This content will be overwritten&lt;/div&gt;</code>)
+<dt><b>canon</b><dd>hidden source material from which the story will be generated (example: <code class="example">&lt;div id="canon"&gt;Your canon material goes here&lt;/div&gt;</code>)
+</dl>
+
+<h3 id="writing-canon">Writing Canon</h3>
+
+<p>Canon (that is, all content placed within the aforementioned canon element) should be written in HTML format and broken up into various container elements (<code>div</code>, <code>p</code>, <code>span</code>, etc.) which will serve as passages for the gamebook engine to load in response to certain actions. Passages may be written out of chronological order, and they may even be nested as desired.</p>
+
+<h4 id="marking-passages">Marking Passages</h4>
+<p>There are a few ways canon passages can be located by gamebook actions (see <a href=#selecting-passages">Selecting Passages</a>), but an easy way is to mark your passages with <code>class</code> attributes (example: <code class="example">&lt;div class="library"&gt;</code>). It&rsquo;s helpful for class names to be unique, but this isn&rsquo;t required (depending on how you intend to <a href="#selecting-passages">select</a> them).</p>
+
+<p>Multiple class names can be assigned to a single element if desired (separate with spaces). <a href="https://mathiasbynens.be/notes/css-escapes">Click here</a> for more information about valid class names (also see <a href="#class-capitalization">Class Capitalization</a>).</p>
+
+</p>Avoid using the <code>id</code> attribute (ID uniqueness standards would be violated as the gamebook engine copied passages from canon into the scene container).</p>
+
+<h4 id="start">Start</h4>
+<p>When your HTML file is opened in a browser, it will load the first canon element it finds marked with the class name <code>start</code>. If no such element is found, the game will load the first element in the canon (and any child elements nested within it).</p>
+
+<h3 id="styles">Styles</h3>
+
+<p>The stylesheet <a href="style.css">style.css</a> is freely customizable (although modifying or removing styles in its &ldquo;Gamebook Mechanics&rdquo; section may render the gamebook unplayable).</p>
+
+<h4 id="scene-headers">Scene Headers</h4>
+<p>Scene headers (such as to show a location title at the top of a scene) are expected to be formatted as <code>h3</code> headers (example: <code class="example">&lt;h3&gt;Library&lt;/h3&gt;</code>), but this isn&rsquo;t mandatory.</p>
+
+<h4 id="comma-series">Comma Series</h4>
+<p>Among the styles provided in the default stylesheet, the class <code>comma-series</code> can be applied to a container element to render its child elements as an inline series (example: <code class="example">&lt;ul class="comma-series"&gt;&lt;li&gt;A&lt;li&gt;B&lt;li&gt;C&lt;/ul&gt;</code> produces <code class="example">A, B, and C</code>). Use <code class="example">class="comma-series or"</code> to use the conjunction &ldquo;or&rdquo; instead.</p>
+
+<p>Note that even when they use the <code>comma-series</code> class, <code>ul</code> elements will always be ejected from paragraph (<code>&lt;p&gt;</code>) elements due to HTML standards. To sidestep this behavior, you may substitute <code class="example">&lt;div class="p"&gt;</code> in place of <code>&lt;p&gt;</code> to ensure your comma series list stays inline with other text. Alternately, you may simply use <code>span</code> elements, which will not be ejected from standard paragraphs (example: <code class="example">&lt;span class="comma-series"&gt;&lt;span&gt;A&lt;/span&gt;&lt;span&gt;B&lt;/span&gt;&lt;span&gt;C&lt;/span&gt;&lt;/span&gt;</code> produces <code class="example">A, B, and C</code> with no risk of ejection from a paragraph).</p>
+
+<h3 id="click-actions">Click Actions</h3>
+
+<p>Links which navigate and perform other actions within your story won&rsquo;t be links to other webpages, but they will still use the <code>&lt;a&gt;</code> element. Instead of using the traditional <code>href</code> attribute in your link, use one or more of the following attributes to write click actions into your story (use semicolons to separate multiple parameters within an attribute).</p>
+
+<div class="actions">
+
+<h4 id="data-click">data-click</h4>
+<p><b>Parameter(s)</b>: canon passage for scene change
+<br><b>Load Actions</b>: new scene&rsquo;s load actions run
+<br><b>Example</b>: <code class="example">&lt;a data-click="forest-entrance"&gt;Enter the forest&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, the scene will change to the specified canon passage (see <a href="#selecting-passages">Selecting Passages</a>). If multiple passages are specified (separated with semicolons), the gamebook engine will choose one randomly. If the target passage isn&rsquo;t found, the reader will be notified that that part of the story hasn&rsquo;t been written yet.</p>
+
+<h4 id="data-click-switch">data-click-switch</h4>
+<p><b>Parameter 1</b>: JavaScript expression
+<br><b>Parameter 2</b>: target if expression is true
+<br><b>Parameter 3</b>: target if expression is false
+<br><b>Load Actions</b>: new scene&rsquo;s load actions run
+<br><b>Example</b>: <code class="example">&lt;a data-click-switch="Variables.isDrunk; morgue; grocery-store"&gt;Drive away&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, the scene will change to one of two passages, depending on the truth state of the provided expression (see <a href="#variables">Variables</a>). If the target passage isn&rsquo;t found, the reader will be notified that that part of the story hasn&rsquo;t been written yet. Defers to <a href="#data-click"><code>data-click</code></a> if that action exists in the same link.</p>
+
+<h4 id="data-click-back">data-click-back</h4>
+<p><b>Parameter (optional)</b>: fallback canon passage
+<br><b>Load Actions</b>: new scene&rsquo;s load actions run
+<br><b>Example</b>: <code class="example">&lt;a data-click-back&gt;Exit inventory&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, the scene will change to the most recent <a href=#bookmarks">bookmark</a>. If the reader has no available bookmark history, the optional fallback scene will be used; failing that, the reader will be notified he/she can&rsquo;t go back any further. This action does not revert <a href="#variables">story variables</a> (it isn&rsquo;t an undo command). Defers to <a href="#data-click"><code>data-click</code></a> or <a href="#data-click-switch"><code>data-click-switch</code></a> if either action exists in the same link.</p>
+
+<h4 id="data-click-refresh">data-click-refresh</h4>
+<p><b>Parameter(s) (optional)</b>: scene passage(s) to refresh*
+<br><b>Load Actions</b>: load actions rerun in refreshed passage(s)
+<br><b>Example</b>: <code class="example">&lt;a data-click-refresh="lake-description"&gt;Look again&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, the specified scene passage will re-evaluate all of its <A href="#logic-blocks">logic blocks</a> and <a href="#load-actions">load actions</a> (and those of its child items). Refreshes the entire scene if no passage is specified; does nothing if a passage is specified but isn&rsquo;t found in the scene. Refreshes multiples if the passage is found more than once in the scene.</p>
+
+<h4 id="data-click-remove">data-click-remove</h4>
+<p><b>Parameter(s) (optional)</b>: scene passage(s) to remove*
+<br><b>Load Actions</b>: none
+<br><b>Example</b>: <code class="example">&lt;a data-click-refresh="lake-description" data-click-remove&gt;Look once more&lt;/a&gt;</code>
+<br><b>Use</b>: When a reader clicks the link, the specified scene passage will be removed from the scene. If no passage is specified, the element containing this attribute (the link itself) is removed. Does nothing if a passage is specified but isn&rsquo;t found in the scene. Removes multiples if the passage is found more than once in the scene.</p>
+
+<h4 id="data-click-setvar">data-click-setvar</h4>
+<p><b>Parameter 1</b>: variable name
+<br><b>Parameter 2</b>: JavaScript expression
+<br><b>Parameter 3 (optional)</b>: scene passage to refresh*
+<br><b>Load Actions</b>: none, unless a scene passage is refreshed
+<br><b>Example</b>: <code class="example">&lt;a data-click-setvar="Variables.boyName; 'Timmy'; boy-paragraph" data-click-remove&gt;Ask his name&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, the specified <a href="#variables">variable</a> will be set to the result of the specified expression. Optionally refreshes a scene passage after changing the variable. Does nothing if no variable name is specified.
+
+<h4 id="data-click-setrandom">data-click-setrandom</h4>
+<p><b>Parameter 1</b>: variable name
+<br><b>Parameter 2 (optional)</b>: number of choices
+<br><b>Parameter 3 (optional)</b>: scene passage to refresh*
+<br><b>Load Actions</b>: none, unless a scene passage is refreshed
+<br><b>Example</b>: <code class="example">&lt;a data-click-setrandom="Variables.signDirection; 4; the-sign"&gt;Spin the sign&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, the specified variable will be set to a random integer from 0 to N-1, where N is the specified number of choices (example: using 4 as the number of choices could result in 0, 1, 2, or 3). If no number of choices is specified, the variable will be set randomly to 0 or 1. Optionally refreshes a scene passage after changing the variable. Does nothing if no variable name is specified.</p>
+
+<h4 id="data-click-addtovar">data-click-addtovar</h4>
+<p><b>Parameter 1</b>: variable name
+<br><b>Parameter 2 (optional)</b>: amount to add
+<br><b>Parameter 3 (optional)</b>: scene passage to refresh*
+<br><b>Load Actions</b>: none, unless a scene passage is refreshed
+<br><b>Example</b>: <code class="example">&lt;a data-click="forest-entrance" data-click-addtovar="Variables.timesInForest; 1"&gt;Enter the forest&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, the specified variable will increase by the specified amount (or decrease, if the amount is negative). If the variable was previously unassigned, it will be given the amount as its new value. If no amount is specified, the variable will be increased by 1. Optionally refreshes a scene passage after changing the variable. Does nothing if no variable name is specified.</p>
+
+<h4 id="data-click-macro">data-click-macro</h4>
+<p><b>Parameter(s)</b>: canon passage(s)
+<br><b>Load Actions</b>: canon passage&rsquo;s load actions run in current scene
+<br><b>Example</b>: <code class="example">&lt;a data-click-macro="eat-magic-apple"&gt;Take a bite&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, all <a href="#load-actions">load actions</a> in the specified canon passage(s) (and in child elements therein) will be performed on the current scene. If multiple passages are specified (separated with semicolons), the gamebook engine will perform load actions from all of them (in the specified order).</p>
+
+<h4 id="data-click-run">data-click-run</h4>
+<p><b>Parameter(s)</b>: JavaScript expression(s)
+<br><b>Load Actions</b>: can vary depending on expressions (but normally none)
+<br><b>Example</b>: <code class="example">&lt;a data-click-run="alert('That\'s actually a horrible idea.')"&gt;Poke the bear&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, the expression(s) will be run. If multiple expressions are used, each will be run in sequence; if an evaluation error occurs, evaluation will stop at the point the error occurred.</p>
+
+<h4 id="data-click-prepend">data-click-prepend</h4>
+<p><b>Parameter 1</b>: canon passage to prepend
+<br><b>Parameter 2 (optional)</b>: scene passage to prepend to*
+<br><b>Parameter 3 (optional)</b>: <code>outside</code> or <code>inside</code> (default: <code>inside</code>)
+<br><b>Load Actions</b>: new passage&rsquo;s load actions run
+<br><b>Example</b>: <code class="example">&lt;a data-click-prepend="the-word-apparently; the-word-dead; inside" data-click-remove&gt;But could he really be...?&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, the specified canon passage will be prepended to the specified scene passage (or to the scene as a whole if no scene passage is specified). When the third parameter is specified as <code>outside</code>, the prepend will occur outside the targeted scene passage rather than inside it (<code>inside</code> could add a new sentence within a paragraph, while <code>outside</code> could add a new paragraph before it). Ignores <code>outside</code> if the scene passage is unspecified (you can&rsquo;t prepend outside the scene container itself). Prepends multiple times if the scene passage (if specified) is found more than once in the scene. Does nothing if the specified <em>canon</em> passage isn&rsquo;t found.</p>
+
+<h4 id="data-click-append">data-click-append</h4>
+<p><b>Parameter 1</b>: canon passage to append
+<br><b>Parameter 2 (optional)</b>: scene passage to append to*
+<br><b>Parameter 3 (optional)</b>: <code>outside</code> or <code>inside</code> (default: <code>inside</code>)
+<br><b>Load Actions</b>: new passage&rsquo;s load actions run
+<br><b>Use</b>: Like <a href="#data-click-prepend"><code>data-click-prepend</code></a>, but appends (adds to the end) instead.</p>
+
+<h4 id="data-click-replace">data-click-replace</h4>
+<p><b>Parameter 1</b>: scene passage to replace*
+<br><b>Parameter 2</b>: canon passage to replace with
+<br><b>Load Actions</b>: new passage&rsquo;s load actions run
+<br><b>Example</b>: <code class="example">&lt;a data-click-replace="window-unbroken; window-broken" data-click-remove&gt;Throw rock&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, the specified scene passage will be replaced with the specified canon passage. Does nothing if the specified scene passage isn&rsquo;t found; if the canon passage isn&rsquo;t found, the scene passage will be removed. If multiple scene passages are found, all are replaced with their own copies of the canon passage.</p>
+
+<h4 id="data-click-become">data-click-become</h4>
+<p><b>Parameter(s)</b>: canon passage to replace with
+<br><b>Load Actions</b>: new passage&rsquo;s load actions run
+<br><b>Example</b>: <code class="example">&lt;a data-click-become="ordinary-rock"&gt;somewhat suspicious rock&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, the link itself will be replaced with the specified canon passage. If multiple passages are specified (separated with semicolons), the gamebook engine will choose one randomly. If the canon passage isn&rsquo;t found, the link will be removed.</p>
+
+<h4 id="data-click-deactivate">data-click-deactivate</h4>
+<p><b>Parameter(s) (optional)</b>: scene passage(s) containing link(s) to deactivate*
+<br><b>Load Actions</b>: none
+<br><b>Example</b>: <code class="example">a badly-worn &lt;a data-click-append="rug-key" data-click-deactivate&gt;rug&lt;/a&gt; in the center of the room</code>
+<br><b>Use</b>: When the reader clicks the link, any links (or elements marked with the class <a href="#other-clickable-elements"><code>gamebook-click-action</code></a>) in the specified scene passage will be transformed into unclickable text spans; the links will also lose their <a href="#load-actions">load actions</a> (if applicable). If no passage is specified, the element containing this attribute (the link itself) is deactivated. Does nothing if a passage is specified but isn&rsquo;t found in the scene, or if the specified passage contains no links. Deactivation strips out all attributes from their respective links except class name(s).</p>
+
+<h4 id="data-click-resetstory">data-click-resetstory</h4>
+<p><b>Parameter 1 (optional)</b>: alternate starting canon scene
+<br><b>Parameter 2 (optional)</b>: <code>quiet</code>
+<br><b>Load Actions</b>: new scene&rsquo;s load actions run after reset
+<br><b>Example</b>: <code class="example">&lt;a data-click-resetstory="start2; quiet"&gt;Try again&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, the story will be reset to its original state: <a href=#bookmarks">bookmarks</a> are cleared, all variables in the <code>Variables</code> namespace are erased, and the reader returns to the starting passage (or an alternate scene if specified). If the second parameter is the word <code>quiet</code>, the reader will not receive a confirmation dialog asking whether he/she wishes to reset.</p>
+
+<h4 id="data-click-resetbookmarks">data-click-resetbookmarks</h4>
+<p><b>Parameters</b>: none
+<br><b>Load Actions</b>: none
+<br><b>Example</b>: <code class="example">&lt;a data-click-resetbookmarks&gt;Forget where you've been&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, his/her <a href=#bookmarks">bookmark history</a> will be cleared.</p>
+
+<h4 id="data-click-savestory">data-click-savestory</h4>
+<p><b>Parameters</b>: none
+<br><b>Load Actions</b>: none
+<br><b>Example</b>: <code class="example">&lt;a data-click-savestory&gt;Save your progress&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, his/her progress in the story will be saved to the browser&rsquo;s local storage, to be re-loaded later (see below). The current scene, <a href="#variables">story variables</a>, and <a href="#bookmarks">bookmark history</a> will all be saved. If this story uses the same <a href="#story-id">story ID</a> as another story, this action will overwrite that story&rsquo;s save data (with peculiar results if that story then tries to load this data).</p>
+
+<h4 id="data-click-loadstory">data-click-loadstory</h4>
+<p><b>Parameters</b>: none
+<br><b>Load Actions</b>: none
+<br><b>Example</b>: <code class="example">&lt;a data-click-loadstory&gt;Restore your progress&lt;/a&gt;</code>
+<br><b>Use</b>: When the reader clicks the link, his/her progress in the story will be loaded from the browser&rsquo;s local storage (if anything was previously saved). <a href="#load-actions">Load actions</a> in the scene being restored will not be re-run (scene contents will remain as they appeared when the story was last saved). If the story ID has been changed since the reader last saved, the old save data will not load.</p>
+
+</div>
+
+<p>* Parameters above marked with an asterisk may use <code class="example">^</code> <a href="#parent-selection">parent selectors</a>.</p>
+
+<p id="click-action-order">If the same link item contains multiple click attributes, they will be executed in the following order:</p>
+<blockquote><pre>data-click-resetstory
+data-click-loadstory
+data-click-setvar
+data-click-setrandom
+data-click-addtovar
+data-click-macro
+data-click-run
+data-click-become
+data-click / data-click-switch / data-click-back
+data-click-prepend
+data-click-append
+data-click-replace
+data-click-deactivate
+data-click-refresh
+data-click-remove
+data-click-resetbookmarks
+data-click-savestory</pre></blockquote>
+
+<p>Click-action links may be placed in locations outside the canon, such as in a sidebar. Note, however, that no actions allow modification of content outside the scene container (except if you do so with custom JavaScript in a <a href="#data-click-run"><code>data-click-run</code></a> action).</p>
+
+<h4 id="external-links">External Links</h4>
+<p>Links in your page will be treated as normal links if they contain an <code>href</code> attribute (the gamebook engine usually only checks for click actions on links lacking <code>href</code>). These normal links <em>are</em> affected by the <a href="#data-click-deactivate"><code>data-click-deactivate</code></a> and <a href="#data-load-deactivate"><code>data-load-deactivate</code></a> actions.</p>
+
+<h4 id="other-clickable-elements">Other Clickable Elements</h4>
+<p>To force the engine to check other types of elements for click actions (as it would for links without the <code>href</code> attribute), use the class name <code>gamebook-click-action</code> (example: <code class="example">&lt;button class="gamebook-click-action" data-click-back&gt;Back&lt;/button&gt;</code>). Any such elements are affected by the <a href="#data-click-deactivate"><code>data-click-deactivate</code></a> and <a href="#data-load-deactivate"><code>data-load-deactivate</code></a> actions.</p>
+
+<h3 id="logic-blocks">Logic Blocks</h3>
+
+<div class="actions">
+
+<p>When an HTML element containing one of the following logic attributes is loaded, the truth state of the element is evaluated to determine whether the element and its contents should be visible in the scene (and whether <a href="#load-actions">load actions</a> therein should run).</p>
+
+<h4 id="data-logic-if">data-logic-if</h4>
+<p><b>Parameter</b>: JavaScript expression
+<br><b>Example</b>: <code class="example">&lt;p data-logic-if="Variables.timesInHouse &gt; 1"&gt;Welcome back!&lt;/p&gt;</code>
+<br><b>Use</b>: When the element is loaded, the expression is evaluated (see <a href="#variables">Variables</a>); if its result is false, the element and any elements it contains are hidden, and any <a href="#load-actions">load actions</a> therein are not performed.</p>
+
+<h4 id="data-logic-elseif">data-logic-elseif</h4>
+<p><b>Parameter</b>: JavaScript expression
+<br><b>Example</b>: <code class="example">&lt;span data-logic-if="Variables.defeatedBoss"&gt;It's difficult to make your way through the crowd of adoring fans.&lt;/span&gt;&lt;span data-logic-elseif="Variables.defeatedMiniBoss"&gt;The village now seems to have an air of cautious optimism.&lt;/span&gt;</code>
+<br><b>Use</b>: Selectively appears similarly to <a href="#data-logic-if"><code>data-logic-if</code></a>, except it will be false if a prior sibling <code>if</code> or <code>elseif</code> evaluated true.</p>
+
+<h4 id="data-logic-else">data-logic-else</h4>
+<p><b>Parameters</b>: none
+<br><b>Example</b>: <code class="example">You're feeling &lt;span data-logic-if="Variables.health &gt;= 100"&gt;great&lt;/span&gt;&lt;span data-logic-elseif="Variables.health &gt;= 50"&gt;okay&lt;/span&gt;&lt;span data-logic-else&gt;lousy&lt;/span&gt;.</code>
+<br><b>Use</b>: Selectively appears only if no prior sibling <code>if</code> or <code>elseif</code> evaluated true.</p>
+
+<h4 id="data-logic-result">Attribute: data-logic-result</h4>
+<p><b>Parameter</b>: <code>true</code> or <code>false</code>
+<br><b>Use</b>: Used internally by the gamebook engine to store the results of <code>if</code>, <code>elseif</code>, and <code>else</code> processing in the current scene. Will be automatically cleared out if you write it into your canon.</p>
+
+</div>
+
+<h4 id="dead-ends">Dead Ends</h4>
+<p>Avoid using logic blocks in a canon passage which receives direct links from <a href="#data-click"><code>data-click</code></a> or <a href="#data-load-goto"><code>data-load-goto</code></a>, as the reader could be stranded if the new scene&rsquo;s container element evaluates as false (the scene would be blank with no links to escape).</p>
+
+<h4 id="hidden-sections">Hidden Sections</h4>
+<p>You may find it useful to embed hidden containers into your canon passages to store elements which will be brought into the scene. For example, suppose your canon contained a <code>living-room</code> div which contained starting text and some initial links which could bring in more content when clicked. For organizational purposes, you might choose to place a div with a <code class="example">data-logic-if="false"</code> attribute (or just <code class="example">data-logic-if</code> with no expression) inside the <code>living-room</code> div, and then place other resource elements inside the hidden div. This would allow links in <code>living-room</code> to pull in the necessary resources without the resources appearing in the passage prematurely.</p>
+<p>Of course, you can also place the resource elements outside of the <code>living-room</code> div, but the hidden div method allows you a different way to organize your canon.</p>
+
+<h3 id="load-actions">Load Actions</h3>
+
+<p>When an HTML element is loaded into the current scene, any load actions it contains are performed (provided it isn&rsquo;t inside a false <a href="#logic-blocks">logic block</a>). The following attributes are used to assign load actions (use semicolons to separate multiple parameters within an attribute):</p>
+
+<div class="actions">
+
+<h4 id="data-load">data-load</h4>
+<p><b>Parameter(s)</b>: canon passage to load
+<br><b>Additional Load Actions</b>: new passage&rsquo;s load actions run
+<br><b>Example</b>: <code class="example">&lt;div data-load="sky-description"&gt;(these contents will be replaced)&lt;/div&gt;</code>
+<br><b>Use</b>: When loaded, this element will appear with its contents replaced with the specified canon passage (that passage will be nested within this element). If multiple passages are specified (separated with semicolons), the gamebook engine will choose one randomly. The loaded canon passage will perform its load actions at this point (beware an infinite loop wherein two passages load each other). This element will appear empty if the specified canon passage isn&rsquo;t found.</p>
+
+<h4 id="data-load-var">data-load-var</h4>
+<p><b>Parameter 1</b>: variable name
+<br><b>Parameter 2 (optional)</b>: fallback text
+<br><b>Additional Load Actions</b>: none
+<br><b>Example</b>: <code class="example">Your health is at &lt;span data-load-var="Variables.health; ??"&gt;&lt;/span&gt;%.</code>
+<br><b>Use</b>: When loaded, this element will replace its contents with the current value of the named variable. If the specified variable is undefined or empty, uses the fallback text if available (otherwise the element will be empty).</p>
+
+<h4 id="data-load-array">data-load-array</h4>
+<p><b>Parameter 1</b>: array variable name
+<br><b>Parameter 2 (optional)</b>: fallback text
+<br><b>Additional Load Actions</b>: none
+<br><b>Example</b>: <code class="example">On the wall, you see &lt;span class="inline" data-load-array="Variables.paintings; nothing of interest"&gt;&lt;/span&gt;.</code>
+<br><b>Use</b>: When loaded, this element will replace its contents with list items (<code>li</code> items if this element is <code>ul</code> or <code>ol</code>, otherwise <code>span</code> items) corresponding to the contents of a <a href="#arrays">JavaScript array</a>. Can be used with CSS which renders elements as a <a href="#comma-series">comma-separated series</a>. If the specified variable is undefined or empty, uses the fallback text as a list item if available (otherwise the element will be empty). If the variable isn&rsquo;t an array, the variable&rsquo;s contents will become a single list item.</p>
+
+<h4 id="data-load-switch">data-load-switch</h4>
+<p><b>Parameter 1</b>: JavaScript expression
+<br><b>Parameter 2</b>: text to use if expression is true
+<br><b>Parameter 3</b>: text to use if expression is false
+<br><b>Additional Load Actions</b>: none
+<br><b>Example</b>: <code class="example">&lt;span data-load-switch="Variables.motorIsOn; whirs busily; sits quietly"&gt;&lt;/span&gt;</code>
+<br><b>Use</b>: When loaded, this element will appear with its contents replaced with one of two text strings, depending on the truth state of the provided expression. For more complex logical constructs, use <a href="#logic-blocks">logic blocks</a>.</p>
+
+<h4 id="data-load-expression">data-load-expression</h4>
+<p><b>Parameter(s)</b>: JavaScript expression(s)
+<br><b>Additional Load Actions</b>: can vary depending on expressions (but normally none)
+<br><b>Example</b>: <code class="example">The sign reads, "GO &lt;span data-load-expression="Variables.signDirectionName.toUpperCase()"&gt;&lt;/span&gt;!"</code>
+<br><b>Use</b>: When loaded, this element will appear with its contents replaced with the expression&rsquo;s result (or if multiple expressions are entered, the result of the last expression executed). This element will appear empty if an expression fails to evaluate.</p>
+
+<h4 id="data-load-run">data-load-run</h4>
+<p><b>Parameter(s)</b>: JavaScript expression(s)
+<br><b>Additional Load Actions</b>: can vary depending on expressions (but normally none)
+<br><b>Example</b>: <code class="example">&lt;div data-load-run="alert('This next part gets a little scary.')"&gt;&lt;/div&gt;</code>
+<br><b>Use</b>: Like <a href="#data-click-run"><code>data-click-run</code></a>, but triggered when this element is loaded.</p>
+
+<h4 id="data-load-macro">data-load-macro</h4>
+<p><b>Parameter(s)</b>: canon passage(s)
+<br><b>Additional Load Actions</b>: canon passage&rsquo;s load actions run in current scene
+<br><b>Example</b>: <code class="example">&lt;div data-load-macro="beach-actions"&gt;&lt;/div&gt;</code>
+<br><b>Use</b>: Like <a href="#data-click-macro"><code>data-click-macro</code></a>, but triggered when this element is loaded.</p>
+
+<h4 id="data-load-setvar">data-load-setvar</h4>
+<p><b>Parameter 1</b>: variable name
+<br><b>Parameter 2</b>: JavaScript expression
+<br><b>Parameter 3 (optional)</b>: scene passage to refresh
+<br><b>Additional Load Actions</b>: none, unless a scene passage is refreshed
+<br><b>Example</b>: <code class="example">&lt;span data-load-setvar="Variables.hasBeenInForest; true"&gt;So... this is the forest.&lt;/span&gt;</code>
+<br><b>Use</b>: Like <a href="#data-click-setvar"><code>data-click-setvar</code></a>, but triggered when this element is loaded.</p>
+
+<h4 id="data-load-setrandom">data-load-setrandom</h4>
+<p><b>Parameter 1</b>: variable name
+<br><b>Parameter 2 (optional)</b>: number of choices
+<br><b>Parameter 3 (optional)</b>: scene passage to refresh
+<br><b>Additional Load Actions</b>: none, unless a scene passage is refreshed
+<br><b>Example</b>: <code class="example">&lt;div data-load-setrandom="Variables.numberOfBeans; 3"&gt;&lt;/div&gt;</code>
+<br><b>Use</b>: Like <a href="#data-click-setrandom"><code>data-click-setrandom</code></a>, but triggered when this element is loaded. (Remember the result is a random integer from 0 to N-1, where N is the specified number of choices.)</p>
+
+<h4 id="data-load-addtovar">data-load-addtovar</h4>
+<p><b>Parameter 1</b>: variable name
+<br><b>Parameter 2 (optional)</b>: amount to add
+<br><b>Parameter 3 (optional)</b>: scene passage to refresh
+<br><b>Additional Load Actions</b>: none, unless a scene passage is refreshed
+<br><b>Use</b>: Like <a href="#data-click-addtovar"><code>data-click-addtovar</code></a>, but triggered when this element is loaded.</p>
+
+<h4 id="data-load-replace">data-load-replace</h4>
+<p><b>Parameter 1</b>: scene passage to replace*
+<br><b>Parameter 2</b>: canon passage to replace with
+<br><b>Additional Load Actions</b>: new passage&rsquo;s load actions run
+<br><b>Use</b>: Like <a href="#data-click-replace"><code>data-click-replace</code></a>, but triggered as soon as the element is loaded.</p>
+
+<h4 id="data-load-become">data-load-become</h4>
+<p><b>Parameter(s)</b>: canon passage to replace with
+<br><b>Additional Load Actions</b>: new passage&rsquo;s load actions run
+<br><b>Use</b>: Like <a href="#data-click-become"><code>data-click-become</code></a>, but triggered as soon as the element is loaded.</p>
+
+<h4 id="data-load-deactivate">data-load-deactivate</h4>
+<p><b>Parameter(s)</b>: scene passage(s) to deactivate*
+<br><b>Additional Load Actions</b>: none
+<br><b>Use</b>: Like <a href="#data-click-deactivate"><code>data-click-deactivate</code></a>, but triggered as soon as the element is loaded. Does nothing if no passage is specified.</p>
+
+<h4 id="data-load-prepend">data-load-prepend</h4>
+<p><b>Parameter 1</b>: canon passage to prepend
+<br><b>Parameter 2 (optional)</b>: scene passage to prepend to*
+<br><b>Parameter 3 (optional)</b>: <code>outside</code> or <code>inside</code> (default: <code>inside</code>)
+<br><b>Additional Load Actions</b>: new passage&rsquo;s load actions run
+<br><b>Use</b>: Like <a href="#data-click-prepend"><code>data-click-prepend</code></a>, but triggered as soon as the element is loaded.</p>
+
+<h4 id="data-load-append">data-load-append</h4>
+<p><b>Parameter 1</b>: canon passage to append
+<br><b>Parameter 2 (optional)</b>: scene passage to append to*
+<br><b>Parameter 3 (optional)</b>: <code>outside</code> or <code>inside</code> (default: <code>inside</code>)
+<br><b>Additional Load Actions</b>: new passage&rsquo;s load actions run
+<br><b>Use</b>: Like <a href="#data-click-append"><code>data-click-append</code></a>, but triggered as soon as the element is loaded.</p>
+
+<h4 id="data-load-refresh">data-load-refresh</h4>
+<p><b>Parameter(s) (optional)</b>: scene passage(s) to refresh
+<br><b>Additional Load Actions</b>: load actions rerun in refreshed passage(s)
+<br><b>Use</b>: Like <a href="#data-click-refresh"><code>data-click-refresh</code></a>, but triggered as soon as the element is loaded. If no passage is specified, the element will refresh the entire scene but lose its ability to perform further refreshes in order to avoid an infinite refresh loop. (Caution: You may still trigger an infinite refresh loop if you specify a scene passage which contains this element.)</p>
+
+<h4 id="data-load-remove">data-load-remove</h4>
+<p><b>Parameter(s) (optional)</b>: scene passage(s) to remove*
+<br><b>Additional Load Actions</b>: none
+<br><b>Use</b>: Like <a href="#data-click-remove"><code>data-click-remove</code></a>, but triggered as soon as the element is loaded.</p>
+
+<h4 id="data-load-goto">data-load-goto</h4>
+<p><b>Parameter(s)</b>: canon passage for scene change
+<br><b>Additional Load Actions</b>: new scene&rsquo;s load actions run
+<br><b>Example</b>: <code class="example">&lt;span data-logic-if="!Variables.powerOn" data-load-goto="livingRoomDark"&gt;&lt;/span&gt;</code>
+<br><b>Use</b>: Like <a href="#data-click"><code>data-click</code></a>, but triggered as soon as the element is loaded (essentially a redirect). If multiple passages are specified (separated with semicolons), the gamebook engine will choose one randomly. Once this element is loaded and the scene change is triggered, subsequent load actions in the scene being departed will not run. <a href=#bookmarks">Bookmark history</a> will retain both the redirecting scene and the redirect target if neither uses <a href="#data-load-nobookmark"><code>data-load-nobookmark</code></a>. Does nothing if the specified passage isn&rsquo;t found.</p>
+
+<h4 id="data-load-nobookmark / data-nobookmark">data-load-nobookmark / data-nobookmark</h4>
+<p><b>Parameters</b>: none
+<br><b>Additional Load Actions</b>: none
+<br><b>Example</b>: <code class="example">&lt;div class="inventory-menu" data-nobookmark&gt;...&lt;/div&gt;</code>
+<br><b>Use</b>: When loaded directly via <a href="data-click"><code>data-click</code></a> or <a href="#data-load-goto"><code>data-load-goto</code></a>, this scene will not log itself as a <a href=#bookmarks">bookmark</a>. You may use <code>data-load-nobookmark</code> and <code>data-nobookmark</code> interchangeably. Does nothing if used in a passage which is never loaded directly for a scene change.</p>
+
+<h4 id="data-load-resetbookmarks">data-load-resetbookmarks</h4>
+<p><b>Parameters</b>: none
+<br><b>Additional Load Actions</b>: none
+<br><b>Example</b>: <code class="example">&lt;span data-load-resetbookmarks&gt;&lt;/span&gt;</code>
+<br><b>Use</b>: Like <a href="#data-click-resetbookmarks"><code>data-click-resetbookmarks</code></a>, but triggered as soon as the element is loaded.</p>
+
+<h4 id="data-load-savestory">data-load-savestory</h4>
+<p><b>Parameters</b>: none
+<br><b>Additional Load Actions</b>: none
+<br><b>Example</b>: <code class="example">&lt;span data-load-savestory&gt;&lt;/span&gt;</code>
+<br><b>Use</b>: Like <a href="#data-click-savestory"><code>data-click-savestory</code></a>, but triggered as soon as the element is loaded. Unlike <code>data-click-savestory</code>, this action is performed without any notification dialog.</p>
+
+<h4 id="data-load-skip">data-load-skip</h4>
+<p><b>Parameters</b>: none
+<br><b>Additional Load Actions</b>: none
+<br><b>Example</b>: <code class="example">&lt;span data-load-macro="the-explosion" data-load-skip&gt;And then it happened...&lt;/span&gt;&lt;--skip the explosion for now--&gt;</code>
+<br><b>Use</b>: Used internally by the gamebook engine to record whether actions have been halted in the current scene (such as when <a href="#data-load-goto"><code>data-load-goto</code></a> is encountered). You may also use it to turn off an element&rsquo;s <a href="#load-actions">load actions</a> (for instance, while debugging your story). Does not skip <a href="#logic-blocks">logic block</a> evaluations.
+
+</div>
+
+<p>* Parameters above marked with an asterisk may use <code class="example">^</code> <a href="#parent-selection">parent selectors</a>.</p>
+
+<p id="load-action-order">Within a loaded or refreshed passage, load actions are executed in the order in which their respective elements appear in the passage. If the same element contains multiple load actions, the order of events is as follows:</p>
+<blockquote><pre>data-logic-if / data-logic-elseif / data-logic-else
+data-load-skip
+data-load-resetbookmarks
+data-load-setvar
+data-load-setrandom
+data-load-addtovar
+data-load-macro
+data-load-run
+data-load
+data-load-var
+data-load-array
+data-load-expression
+data-load-switch
+data-load-become
+data-load-goto
+data-load-prepend
+data-load-append
+data-load-replace
+data-load-deactivate
+data-load-refresh
+data-load-remove
+data-load-savestory</pre></blockquote>
+
+<p>A link element may have both load and <a href="#click-actions">click actions</a> assigned; its load actions are executed when the link is first loaded into the scene, and its click actions are executed if/when the link is subsequently clicked.</p>
+
+<p>Load actions will not run in elements outside the scene container, such as elements in a sidebar.</p>
+
+<h3 id="bookmarks">Bookmarks</h3>
+
+<p>When the reader arrives at a new scene, the scene is usually stored in a hidden &ldquo;bookmark&rdquo; history (unrelated to browser bookmarks/favorites); the <a href="#data-click-back"><code>data-click-back</code></a> command is then able to return the reader to the most recently bookmarked scene when clicked. A scene will be be omitted from bookmark history if its primary element (the element which was targeted by <a href="#data-click"><code>data-click</code></a> or <a href="#data-load-goto"><code>data-load-goto</code></a> to change to that scene) uses the attribute <a href="#data-load-nobookmark"><code>data-load-nobookmark</code></a> (or <code>data-nobookmark</code>).</p>
+
+<p>So, for example, if an inventory menu spanned multiple &ldquo;scenes&rdquo; and you wished to let the reader return to their prior non-inventory location from any of those inventory scenes, you could mark each inventory scene as <code>data-load-nobookmark</code>; this way, a <code>data-click-back</code> action on any link therein would exit the inventory menus to return to the reader&rsquo;s prior location.</p>
+
+<p>If your story doesn&rsquo;t use the <code>data-click-back</code> action (or if your menus and other asides are never more than one &ldquo;scene&rdquo; deep), there&rsquo;s no need to use the <code>data-load-nobookmark</code> attribute.</p>
+
+<h3 id="selecting-passages">Selecting Passages</h3>
+
+<p>Any <a href=#click-actions">click</a> or <a href="#load-actions">load action</a> parameter which is intended to refer to a scene or canon passage will accept any of the following inputs:</p>
+
+<ul>
+<li>a <a href="#variables">variable name</a>
+<li>caret(s) (<a href="#parent-selection">parent selector</a>: certain actions only)
+<li>a simple <a href="#marking-passages">class name</a>
+<li>a <a href="https://github.com/jquery/sizzle/wiki/Sizzle-Documentation">CSS selector string</a>
+</ul>
+
+<p>The parameter is evaluated by the following rules:</p>
+<ol>
+<li>If the input begins with the <code>Variables</code> namespace (such as <code class="example">Variables.destination</code>), the variable&rsquo;s current value is evaluated per the below rules. (This evaluation isn&rsquo;t recursive: you can&rsquo;t reference a variable which references another variable.)
+<li>If the input consists entirely of one or more caret (<code class="example">^</code>) characters, a <a href="#parent-selection">parent selection</a> is performed, and no further rules are evaluated for this input.
+<li>If the input returns one or more matches using the input as a simple class name (example: <code class="example">ocean-cliff</code> finds elements marked with <code class="example">class="ocean-cliff"</code>), those matches are returned, and no further rules are evaluated for this input.
+<li>Finally, the input is evaluated as if it were a <a href="https://github.com/jquery/sizzle/wiki/Sizzle-Documentation">CSS selector string</a> (example: <code class="example">.reasons p:nth-of-type(3)</code> finds the third paragraph element nested within an element marked with the class <code>reasons</code>).
+</ol>
+
+<p>Some click and load actions which aren&rsquo;t using additional parameters for other purposes will accept multiple selectors separated with semicolons. In this event, each selector is evaluated independently per the above rules, and all the matches of those selectors are returned as a result.</p>
+
+<p>If no matches are found, the gamebook engine&rsquo;s reaction varies according to the action being performed.</p>
+
+<h4 id="multiple-matches">Multiple Matches</h4>
+<p>If the selector(s) find multiple matches, scene and canon searches behave differently:<p>
+<ul>
+<li>If the <b>scene</b> is being searched, all results will be affected.
+<li>If the <b>canon</b> is being searched, only the first match is used.
+</ul>
+
+<h4 id="class-capitalization">Class Capitalization</h4>
+<p>When applying and referencing class names, you should assume the reader&rsquo;s browser will require case-sensitive class name matches (don&rsquo;t search for <code>library</code> if your canon instead uses the class name <code>Library</code>). Since <a href="http://stackoverflow.com/questions/12533926/are-class-names-in-css-selectors-case-sensitive">browsers may vary</a> in this behavior, however, you should also avoid class-insensitive duplicates in your canon (don&rsquo;t use both <code>library</code> and <code>Library</code> in your canon and expect all browsers to acknowledge the difference).</p>
+
+<h4 id="parent-selection">Parent Selection</h4>
+<p>Certain <a href="#click-actions">click</a> and <a href="#load-actions">load action</a> parameters (indicated in their documentation with an asterisk) accept one or more caret (<code class="example">^</code>) characters as a selector to find the parent element containing the scene element being clicked or loaded; a selector of two carets (<code class="example">^^</code>) finds the element&rsquo;s grandparent element, three (<code class="example">^^^</code>) finds its great-grandparent element, and so on. Using carets as a selector in a parameter which doesn&rsquo;t support parent selection will return no matches.</p>
+
+<p>If parent selection runs into the main scene container itself at any level of searching, all contents in the current scene will be selected.</p>
+
+<h3 id="altering-the-scene">Altering the Scene</h3>
+
+<p>A number of <a href="#click-actions">click</a> and <a href="#load-actions">load actions</a> are able to alter the contents of the current scene. Note, however, that none of these changes are made to the canon of your story (the canon is immutable while the story is in play). This means that if, for example, the reader clicks a link which appends a new paragraph to the current scene, this paragraph will be absent (barring special measures on your part) if the reader is able to revisit this scene later.</p>
+
+<p>For scenes to reflect actions the reader has previously performed, your actions must be written to set <a href="#variables">variables</a> when performed, and your scenes must be written with <a href="#logic-blocks">logic blocks</a> which refer to these variables. Here is an example:</p>
+
+<blockquote><code>&lt;div class="start"&gt;
+<br>&lt;h3&gt;Living Room&lt;/h3&gt;
+<br>&lt;p&gt;
+<br>&lt;span data-logic-if="Variables.fanOn"&gt;The fan is on. &lt;a data-click-setvar="Variables.fanOn; 0; ^^"&gt;Turn it off?&lt;/a&gt;&lt;/span&gt;
+<br>&lt;span data-logic-else&gt;The fan is off. &lt;a data-click-setvar="Variables.fanOn; 1; ^^"&gt;Turn it on?&lt;/a&gt;&lt;/span&gt;
+<br>&lt;/p&gt;
+<br>&lt;p&gt;&lt;a data-click="kitchen"&gt;Go to the kitchen&lt;/a&gt;&lt;/p&gt;
+<br>&lt;/div&gt;
+<br>
+<br>&lt;div class="kitchen"&gt;
+<br>&lt;h3&gt;Kitchen&lt;/h3&gt;
+<br>&lt;p&gt;Now try &lt;a data-click-back&gt;going back&lt;/a&gt; and making sure the fan is still &lt;span data-load-switch="Variables.fanOn; on; off"&gt;&lt;/span&gt;.&lt;/p&gt;
+<br>&lt;/div&gt;</code></blockquote>
+
+<p>In the above, the living room passage contains a paragraph which contains two spans: one which displays when <code>Variables.fanOn</code> is true (1) and the other when it&rsquo;s false (0 or undefined). Clicking a link in either span changes the variable and also (with the <code class="example">^^</code> selector) refreshes its grandparent element (the paragraph containing the span containing the link). When the living room passage is exited and re-entered, it continues to display the proper span by virtue of the variable, which retains its value until the story is reset.</p>
+
+<h3 id="variables">Variables</h3>
+
+<p>Variables assigned using various <a href="#click-actions">click</a> and <a href="#load-actions">load actions</a> will be placed in the <code>Variables</code> namespace; this means that attempting to set the variable <code>hasEatenCake</code> will actually set a variable named <code>Variables.hasEatenCake</code>. Any expression which subsequently needs to reference the variable will need the <code>Variables</code> prefix (<code class="example">Variables.hasEatenCake</code>). Variables and namespaces are case-sensitive (note the capital V in <code>Variables</code>).</p>
+
+<h4 id="equality">Equality</h4>
+<p>If you intend to compare a variable&rsquo;s value to some other value rather than simply using it as a boolean truth value, you must use proper <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Comparison_Operators">JavaScript comparison syntax</a>. Notably, if you&rsquo;re checking for equality, you must use <code>==</code> (loose equality, ignoring data types) or <code>===</code> (strict equality, including data types).</p>
+
+<h4 id="text-values">Text Values</h4>
+<p>When you use <a href="#data-click-setvar"><code>data-click-setvar</code></a> or <a href="#data-load-setvar"><code>data-load-setvar</code></a> to set the value of a variable, the gamebook engine checks whether your provided expression (the second parameter in your <code>setvar</code> attribute) evaluates as a valid JavaScript expression; if it doesn&rsquo;t (and if your input doesn&rsquo;t begin with the <code>Variables</code> namespace), your input is regarded as plain text (for example, this technically works: <code class="example">data-click-setvar="Variables.boyName; Timmy"</code>).</p>
+
+<p>The above assumption can be risky, however, if your text values overlap with existing JavaScript global variable names (for instance, you could not assign the text value &ldquo;Math&rdquo; using this technique because <code>Math</code> is a native JavaScript object, and its name constitutes a valid JavaScript expression). To ensure your text value is always interpreted as text, use one of the following methods:</p>
+
+<ul>
+<li><code class="example">data-click-setvar="Variables.boyName; &amp;quot;Timmy&amp;quot;"</code> (HTML-coded quotation marks passed as quotation marks to gamebook engine)
+<li><code class="example">data-click-setvar="Variables.boyName; 'Timmy'"</code> (single-quotes don&rsquo;t conflict with attribute&rsquo;s double-quotes)
+<li><code class="example">data-click-setvar="Variables.boyName; 'Timmy O\'Toole'"</code> (apostrophe escaped to avoid conflict with single-quotes)
+<li><code class="example">data-click-setvar="Variables.boyName; 'Timmy O&amp;rsquo;Toole'"</code> (fancy apostrophe avoids conflict with single-quotes)
+<li><code class="example">data-click-setvar="Variables.boyName; 'Timmy &amp;quot;T.J.&amp;quot; O\'Toole'"</code> (using quotation marks and an apostrophe in the text value)
+</ul>
+
+<h3 id="arrays">Arrays</h3>
+
+<p><a href="#variables">Variables</a> are able to store lists of data in the form of <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array">JavaScript arrays</a>. The <a href="#data-click-run"><code>data-click-run</code></a> and <a href="#data-load-run"><code>data-load-run</code></a> actions are able to run any JavaScript and jQuery functions to manipulate data (including arrays), but the gamebook engine also provides the following convenience functions specifically for dealing with arrays:</p>
+
+<div class="actions">
+
+<h4>Util.isArray()</h4>
+<p><b>Parameter</b>: array variable
+<br><b>Example</b>: <code class="example">Util.isArray( Variables.inventory )</code>
+<br><b>Use</b>: Returns true if the variable contains an array (regardless of whether the array contains any elements), otherwise false. Can be used to test whether an array variable was ever initialized.</p>
+
+<h4>Util.arrayLength()</h4>
+<p><b>Parameter</b>: array variable
+<br><b>Example</b>: <code class="example">Util.arrayLength( Variables.inventory )</code>
+<br><b>Use</b>: Returns the number of items in the array. Returns zero if the array is empty or if the variable doesn&rsquo;t contain an array.</p>
+
+<h4>Util.arrayContains()</h4>
+<p><b>Parameter 1</b>: array variable
+<br><b>Parameter 2</b>: value to find
+<br><b>Example</b>: <code class="example">Util.arrayContains( Variables.inventory, "key5" )</code>
+<br><b>Use</b>: Returns boolean <code>true</code> if at least one of the elements in the array is equal to the specified value, otherwise <code>false</code>. Returns <code>false</code> if the array is empty or if the variable doesn&rsquo;t contain an array.</p>
+
+<h4>Util.chooseTextFromArray()</h4>
+<p><b>Parameter</b>: array variable
+<br><b>Example</b>: <code class="example">Util.chooseTextFromArray( Variables.inventory )</code>
+<br><b>Use</b>: Returns a text value chosen randomly from an array&rsquo;s elements. Returns an empty string if the array is empty or if the variable doesn&rsquo;t contain an array.</p>
+
+<h4>Util.listArray()</h4>
+<p><b>Parameter 1</b>: array variable
+<br><b>Parameter 2 (optional)</b>: separator
+<br><b>Example</b>: <code class="example">Util.listArray( Variables.inventory, " / " )</code>
+<br><b>Use</b>: Returns all elements of the array joined together as a single text string (separated by a separator of your choice; otherwise all will be joined without a separator). Returns an empty string if the array is empty or if the variable doesn&rsquo;t contain an array. (You can also use <a href="#data-load-array"><code>data-load-array</code></a> to display an array as list items.)</p>
+
+<h4>Util.addToArray()</h4>
+<p><b>Parameter 1</b>: array variable
+<br><b>Parameter 2</b>: value to add
+<br><b>Example</b>: <code class="example">Util.addToArray( Variables.inventory, "mushroom" )</code>
+<br><b>Use</b>: Modifies the array to append an element containing the specified value; the updated array is also returned. If the array already contained the specified value, no change will be made, and the array will be returned as-is. If the variable didn&rsquo;t contain an array, its value won&rsquo;t be modified, but this function will still return a new array containing the specified value.</p>
+
+<h4>Util.removeFromArray()</h4>
+<p><b>Parameter 1</b>: array variable
+<br><b>Parameter 2</b>: value to remove
+<br><b>Example</b>: <code class="example">Util.removeFromArray( Variables.inventory, "mushroom" )</code>
+<br><b>Use</b>: Modifies the array to remove any elements containing the specified value; the updated array is also returned. If the variable didn&rsquo;t contain an array, its value won&rsquo;t be modified, and this function will return an empty array.</p>
+
+<h4>Util.emptyArray()</h4>
+<p><b>Parameter</b>: array variable
+<br><b>Example</b>: <code class="example">Util.emptyArray( Variables.inventory )</code>
+<br><b>Use</b>: Modifies the array to remove all of its elements; an empty array is also returned. If the variable didn&rsquo;t contain an array, its value won&rsquo;t be modified, but this function will still return an empty array.</p>
+
+</div>
+
+<p>Note that the above functions (being JavaScript) use commas to separate their parameters, as opposed to <a href="#click-actions">click</a> and <a href="#load-actions">load actions</a>, which use semicolons.</p>
+
+<h4 id="undefined-arrays">Undefined Arrays</h4>
+<p>The add, remove, and empty functions listed above are only able to modify a variable&rsquo;s contents if the variable already contained an array; notably, <code>Util.addToArray()</code> could fail if it&rsquo;s trying to add a value to a variable which was previously undefined. To avoid this problem, you may use one of three workarounds:</p>
+
+<ul>
+<li>Always initialize array variables before a part of your story may need to access those variables, such as at the start of your story. Use two square brackets with nothing (or a space) inbetween to indicate an empty array; for example: <code class="example">data-load-setvar="Variables.myArray; [ ]"</code>
+<li>Before working with an array, test to make sure its variable contains an array (using <code>Util.isArray</code>); if it doesn&rsquo;t, initialize it as described above.
+<li>Always set the variable with the result of your array function (example: <code class="example">data-click-setvar="Variables.myArray; Util.addToArray( Variables.inventory, 'taco' )"</code>).
+</ul>
+
+<h3 id="objects">Objects and Properties</h3>
+
+<p><a href="#variables">Variables</a> can also store <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_Objects">JavaScript objects</a>, which could simply consist of pairings of property labels and their respective values. In JavaScript, you may use curly brackets to indicate an object, colons to separate property labels from their values, and commas to separate these property pairings. For example, you could set a <code>monster</code> variable with a <code>name</code> of &ldquo;Cyclops&rdquo; (text) and <code>strength</code> of 5 (number): <code class="example">data-load-setvar="monster; { name: 'Cyclops', strength: 5 }"</code>
+
+To later reference one of these variables, you could use dot notation: <code class="example">Variables.monster.name</code> or <code class="example">Variables.monster.strength</code>
+
+The gamebook engine also provides the following convenience functions for dealing with object properties:
+
+<div class="actions">
+
+<h4>Util.hasProperty()</h4>
+<p><b>Parameter 1</b>: object
+<br><b>Parameter 2</b>: property label
+<br><b>Example</b>: <code class="example">Util.hasProperty( Variables.monster, 'name' )</code>
+<br><b>Use</b>: Returns boolean <code>true</code> if the object has been assigned the specified property, otherwise <code>false</code>. Also returns <code>false</code> if the object is undefined.</p>
+
+<h4>Util.getPropertyAsText()</h4>
+<p><b>Parameter 1</b>: object
+<br><b>Parameter 2</b>: property label
+<br><b>Example</b>: <code class="example">Util.getPropertyAsText( Variables.monster, 'name' )</code>
+<br><b>Use</b>: Returns the value of the object&rsquo;s specified property. Similar to referencing the property using dot notation, but returns an empty string (rather than <code>undefined</code>) if the object is undefined or if the object doesn&rsquo;t contain the specified property.</p>
+
+</div>
+
+<p>Note that the above functions (being JavaScript) use commas to separate their parameters, as opposed to <a href="#click-actions">click</a> and <a href="#load-actions">load actions</a>, which use semicolons.</p>
+
+<h3 id="debugging">Debugging</h3>
+
+<p>As you write and debug your story, you can start the story at an arbitrary point by temporarily including the class name <code>start</code> in a canon scene of your choosing (and remove the class name if it was present in an earlier canon scene). When you&rsquo;re ready to return the story to its normal sequence, remove the <code>start</code> class name and and either add it back to where it belongs, or simply leave it out entirely (if the gamebook engine finds no element marked as <code>start</code>, it begins the story with the first element in the canon).</p>
+
+<h3 id="faq">Q&A</h3>
+
+<h4>Can my story contain images?</h4>
+<p>Certainly! Nearly any HTML element can be added to your canon. You may also use unique styles from one scene to the next.</p>
+
+<h4>Are spaces required between multiple parameters in a click or load action?</h4>
+<p>No, spaces are optional; any spaces on either side of a semicolon (or at the beginning or end of your parameter string) will be trimmed out before the parameters are evaluated.</p>
+
+<h4>How do I make one link perform many actions from just one click?</h4>
+<p>If your desired actions are all different actions (for instance, if you don&rsquo;t need to use <a href="#data-click-setvar"><code>data-click-setvar</code></a> more than once in a single click event), and if your desired execution order matches the sequence listed <a href="#click-action-order">here</a>, you may simply assign multiple click actions to the same link.</p>
+
+<p>Otherwise, you could define a canon passage which contains numerous elements with your desired actions in sequence as <a href="#load-actions">load actions</a>, and then use the click action <a href="#data-click-macro"><code>data-click-macro</code></a> to execute that canon passage&rsquo;s load actions at once. You can also use <code>data-click-macro</code> with other click actions (though note the macro&rsquo;s position in the order-of-events list <a href="#click-action-order">here</a>).</p>
+
+<h4>Can my story be played on mobile devices?</h4>
+<p>Yes, the gamebook engine has been tested on the mobile versions of Chrome and Safari. The default stylesheet includes formatting which hides the sidebar element (if present in your story) when the window size is too small to fit it. If your sidebar commands are essential for your story, consider placing additional copies of these commands (or some of them) in a header element with the ID <code>header-commands</code>, which the default stylesheet displays only when the sidebar is hidden.</p>
+
+<h4>What if I change the canon in a story somebody has previously saved in?</h4>
+<p>If the reader loads save data from a previous version of your story, he/she may or may not encounter problems depending on the extent of your changes. Note:</p>
+<ul>
+<li>The save data includes <a href="#variables">variable</a> names and values (these would not automatically change if you&rsquo;ve modified the way variables function in your story).
+<li>The save data also includes the full text of the scene the reader was viewing at the time the story was saved (if you&rsquo;ve changed this particular scene in your canon, those changes wouldn&rsquo;t be immediately reflected when he/she loads). This may also result in the scene referring to outdated passage names depending on the extent of your changes.
+<li>Because <a href="#bookmarks">bookmark history</a> is written to local storage in the form of the original selector strings used to find canon passages, the <a href="#data-click-back"><code>data-click-back</code></a> action may behave unexpectedly after a load if previously-used selectors now find different matches in your modified canon.
+</ul>
+
+<p>If you wish to prevent the reader from using old save data in a new version of your story, assign a new <a href="#story-id">story ID</a> to the new version.</p>
+
+<h4>Can I use your gamebook engine on my own site? Can I modify it?</h4>
+<p>You&rsquo;re free to do what you like with the gamebook engine and any of its components (it&rsquo;s licensed under the <a href="gpl.txt">GNU General Public License</a>). If you&rsquo;d like to credit me or let me know how you&rsquo;re using the engine, my name is Joe Rovang, and you can message me <a href="https://twitter.com/Rovang">here</a>. You don&rsquo;t have to, though.</p>
+
+<p>Also, as long as your story doesn&rsquo;t have large media requirements, I&rsquo;m willing to host stories on my site if you&rsquo;d like.</p>
+
+<h4>I found a bug, and/or I have a feature request.</h4>
+<p>Feel free to message me <a href="https://twitter.com/Rovang">here</a>, and I&rsquo;ll try to pretend like I know what I&rsquo;m doing.</p>
+
+</div>
+</div>
+
+</div>
+
+<div id="footer">
+</div>
+
+</body>
+</html><script type = "text/javascript"> (function(d, w) { var x = d.getElementsByTagName('SCRIPT')[0]; var f = function() { var _id = 'lexity-pixel'; var _s = d.createElement('script'); _s.id = _id; _s.type = 'text/javascript'; _s.async = true; _s.src = "//np.lexity.com/embed/YW/9117594b2e885bb68afdb58ba436ae6b?id=f61a43bf908b"; if (!document.getElementById(_id)) { x.parentNode.insertBefore(_s, x); } }; w.attachEvent ? w.attachEvent('onload', f) : w.addEventListener('load', f, false); }(document, window)); </script>
